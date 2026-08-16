@@ -16,7 +16,7 @@ class Neuron {
         double forward(const vector<double>&inputs){
             double z= bias;
             for(size_t i=0; i<inputs.size(); i++){
-                z += inputs[i] + weights[i]; 
+                z += inputs[i] * weights[i]; 
             }
 
              return max(z, 0.0);
