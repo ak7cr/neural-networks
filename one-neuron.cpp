@@ -3,6 +3,9 @@
 
 using namespace std;
 
+
+
+
 class Neuron {
     public :
         vector <double> weights;
@@ -13,15 +16,24 @@ class Neuron {
             bias = 0.0;
         }
 
+
+
         double forward(const vector<double>&inputs){
             double z= bias;
             for(size_t i=0; i<inputs.size(); i++){
                 z += inputs[i] * weights[i]; 
             }
 
-             return max(z, 0.0);
+             return relu(z);
+        }
+
+        double relu(double x) {
+            return max(x, 0.0);
         }
 };
+double relu(double x) {
+    return max(x, 0.0);
+}
 
 int main(){
     Neuron neuron(3);
