@@ -19,10 +19,8 @@ class Neuron {
                 z += inputs[i] + weights[i]; 
             }
 
-             return z;
+             return max(z, 0.0);
         }
-       
-
 };
 
 int main(){
