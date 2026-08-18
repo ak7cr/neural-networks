@@ -27,8 +27,14 @@ class Neuron {
              return relu(z);
         }
 
+        // activation function
         double relu(double x) {
             return max(x, 0.0);
+        }
+
+        // mean squared error - mse
+        double mse(double target, double prediction){
+            return (target - prediction) * (target - prediction);
         }
 };
 double relu(double x) {
@@ -45,9 +51,12 @@ int main(){
     neuron.bias = 1.0;
 
     vector<double> input = {2, 3, 4};
+    double target = 10.0;
 
     double output = neuron.forward(input);
 
-    cout << output;
+    cout << output << endl;
+
+    cout << "The Loss : " << neuron.mse(target, output);
     
 }
