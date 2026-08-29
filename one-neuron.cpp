@@ -3,68 +3,75 @@
 #include <algorithm>
 #include <cmath>
 
-
 using namespace std;
 
-
 class Neuron {
-    public :
-        vector <double> weights;
-        double bias;
+public:
+    vector<double> weights;
+    double bias;
 
-        Neuron(int input_size){
-            weights.resize(input_size, 0.0);
-            bias = 0.0;
+    Neuron(int input_size) {
+        weights.resize(input_size, 0.0);
+        bias = 0.0;
+    }
+
+    // Activation function - ReLU
+    double relu(double x) {
+        return max(x, 0.0);
+    }
+
+    // Derivative of ReLU
+    double drelu(double x) {
+        return x > 0 ? 1 : 0;
+    }
+
+    // Forward pass
+    double forward(const vector<double>& inputs) {
+        double z = bias;
+
+        for (size_t i = 0; i < inputs.size(); i++) {
+            z += inputs[i] * weights[i];
         }
 
-        // activation function - ReLU
-        double relu(double x) {
-            return max(x, 0.0);
-        }
+        return z;
+    }
 
-        // differentiated ReLU { 1 for > 0 & 0 for < 0 }
-        double drelu(double x){
-            return x>0 ? 1 : 0;
-        }
+    // Squared error
+    double squared_error(double target, double prediction) {
+        return (target - prediction) * (target - prediction);
+    }
 
-        // this is prediction - also called forward 
-        double forward(const vector<double>&inputs){
-            double z= bias;
-            for(size_t i=0; i<inputs.size(); i++){
-                z += inputs[i] * weights[i]; 
-            }
+    // Gradient for weights
+    double gradient(
+        double target,
+        double prediction,
+        double z,
+        double input
+    ) {
+        return 2 * (prediction - target) * drelu(z) * input;
+    }
 
-             return z;
-        }
+    // Gradient for bias
+    double bias_gradient(
+        double target,
+        double prediction,
+        double z
+    ) {
+        return 2 * (prediction - target) * drelu(z);
+    }
 
-        // loss calculation
-
-        // squared error -  not mse
-        double squared_error(double target, double prediction){
-            return (target - prediction) * (target - prediction);
-        }
-
-        // gradient for weights
-        double gradient(
-            double target,
-            double prediction,
-            double z,
-            double input // here the input x(i) for weight w(i)
-        ){
-            return 2*(prediction - target) * drelu(z) * input;
-        }
-        // gradient for bias
-        double bias_gradient(double target, double prediction, double z) {
-           return 2 * (prediction - target) * drelu(z);
-        }
-
-        // gradient descent
-        double new_weight (double old_weight, double learning_rate, double gradient){
-            return old_weight - (learning_rate * gradient);
-        }
+    // Gradient descent
+    double new_weight(
+        double old_weight,
+        double learning_rate,
+        double gradient
+    ) {
+        return old_weight - (learning_rate * gradient);
+    }
 };
 
-int main(){
+int main() {
+
     Neuron neuron(3);
 
     neuron.weights[0] = 0.5;
@@ -74,64 +81,94 @@ int main(){
     neuron.bias = 1.0;
 
     vector<double> input = {2, 3, 4};
-    size_t input_c = input.size();
-
 
     double target = 10.0;
 
-    double learning_rate = 0.01;
+    double learning_rate = 0.0001;
 
-    double prediction = 0.0;
-
+    double threshold = 0.00001;
     int count = 1;
-    while(abs(prediction - target) > 0.001){
-        
-        cout << "Iteration : "<<count << endl;
 
+    while (true) {
 
-        double newWeight1 = neuron.weights[0];
-        double newWeight2 = neuron.weights[1];
-        double newWeight3 = neuron.weights[2];
+        // 1. Forward pass
+        double z = neuron.forward(input);
+        double prediction = neuron.relu(z);
 
-        double newBias = neuron.bias;
+        // 2. Calculate loss
+        double loss = neuron.squared_error(target, prediction);
 
-    double z = neuron.forward(input); // pre-relu (pre-activation)
-    prediction = neuron.relu(z);
-        
-    cout << "Prediction : " << prediction << endl;
+        // 3. Check stopping condition
+        if (loss <= threshold)
+            break;
 
-    cout << "The Loss : " << neuron.squared_error(target, prediction) << endl;
+        // 4. Calculate gradients
+        double gradient_1 =
+            neuron.gradient(target, prediction, z, input[0]);
 
-    double gradient_1 = neuron.gradient(target, prediction, z, input[0]);
-    cout << "The Gradient 1 : " << gradient_1 << endl;
-    double gradient_2 = neuron.gradient(target, prediction, z, input[1]);
-    cout << "The Gradient 2 : " << gradient_2 << endl;
-    double gradient_3 = neuron.gradient(target, prediction, z, input[2]);
-    cout << "The Gradient 3 : " << gradient_3 << endl;
-    double gradient_b = neuron.bias_gradient(target, prediction, z);
-    cout << "The Bias Gradient : " << gradient_b << endl;
-    
-   
+        double gradient_2 =
+            neuron.gradient(target, prediction, z, input[1]);
 
-    cout << "The new weight from old " << neuron.weights[0] << " is : " ;
-    neuron.weights[0] = neuron.new_weight(
-        newWeight1,  learning_rate, gradient_1);
-        cout << neuron.weights[0] << endl;
-    cout << "The new weight from old " << neuron.weights[1] << " is : " ;
-    neuron.weights[1] = neuron.new_weight(
-        newWeight2,  learning_rate, gradient_2);
-        cout << neuron.weights[1] << endl;
-    cout << "The new weight from old " << neuron.weights[2] << " is : " ;
-    neuron.weights[2] = neuron.new_weight(
-        newWeight3,  learning_rate, gradient_3);
-        cout << neuron.weights[2] << endl;
-    cout << "The new bias from old " << neuron.bias << " is : " ;
-    neuron.bias = neuron.new_weight(
-    newBias, learning_rate, gradient_b);
-        cout << neuron.bias << endl;
-    
+        double gradient_3 =
+            neuron.gradient(target, prediction, z, input[2]);
+
+        double gradient_b =
+            neuron.bias_gradient(target, prediction, z);
+
+        // 5. Update weights
+        neuron.weights[0] =
+            neuron.new_weight(
+                neuron.weights[0],
+                learning_rate,
+                gradient_1
+            );
+
+        neuron.weights[1] =
+            neuron.new_weight(
+                neuron.weights[1],
+                learning_rate,
+                gradient_2
+            );
+
+        neuron.weights[2] =
+            neuron.new_weight(
+                neuron.weights[2],
+                learning_rate,
+                gradient_3
+            );
+
+        // 6. Update bias
+        neuron.bias =
+            neuron.new_weight(
+                neuron.bias,
+                learning_rate,
+                gradient_b
+            );
+
+        // 7. Print progress
+        if (count % 10 == 0) {
+            cout << "Iteration: " << count
+                 << " | Prediction: " << prediction
+                 << " | Loss: " << loss
+                 << endl;
+        }
+
+        // 8. Next iteration
         count++;
-        cout << "------------------------------" << endl;
     }
-    
+
+    cout << "\nTraining completed!" << endl;
+    cout << "Iterations: " << count << endl;
+    cout << "Final prediction: "
+         << neuron.relu(neuron.forward(input))
+         << endl;
+
+    cout << "Final loss: "
+         << neuron.squared_error(
+                target,
+                neuron.relu(neuron.forward(input))
+            )
+         << endl;
+
+    return 0;
 }
